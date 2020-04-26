@@ -1,42 +1,115 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { withTranslation } from 'react-i18next';
-import s from './App.scss';
+import { Container, Row, Col, Page, Box } from 'wix-style-react';
+import WSRForm from '../WSRForm';
+import WSRExtra from '../WSRExtra';
+import ActionBar from './ActionBar';
+import SubmittedInfo from '../SubmittedInfo';
 
-/* <-- To remove demo stuff just copy-paste:
-  \{?/\*\s?<--([\n\n]|.)*?-->\s?\*\/\}?
-  to your search input with RegExp enabled and remove everything matched.
---> */
+const colorOptions = [
+  { id: 0, value: 'Red' },
+  { id: 1, value: 'Green' },
+  { id: 2, value: 'Blue' },
+  { id: 3, value: 'Yellow' },
+  { id: 4, value: 'Pink' },
+];
 
-class App extends React.Component {
-  static propTypes = {
-    t: PropTypes.func,
+const InitalState = {
+  name: '',
+  selectedColorId: undefined,
+  isAgreeingToTerms: false,
+  funFact: '',
+  submittedValues: null,
+};
+
+export default class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      ...InitalState,
+    };
+  }
+
+  onClearPressed = () => {
+    this.setState({
+      ...InitalState,
+    });
   };
 
-  /* <-- Feel free to remove this lifecycle hook */
-  /* <-- Please also remove `yoshi-template-intro` from your package.json */
-  state = {};
-  async componentDidMount() {
-    const { default: TemplateIntro } = await import('yoshi-template-intro');
-    this.setState({ TemplateIntro });
-  } /* --> */
+  onSubmitPressed = () => {
+    this.setState(state => ({
+      submittedValues: {
+        color: state.selectedColorId ? colorOptions[state.selectedColorId].value : '',
+        name: state.name,
+        funFact: state.funFact,
+      },
+    }));
+  };
+
+  isSubmitEnabled= () => this.state.name && this.state.isAgreeingToTerms
 
   render() {
-    const { t } = this.props;
-
     return (
-      <div className={s.root}>
-        <h2 className={s.title} data-testid="app-title">
-          {t('app.title')}
-        </h2>
-
-        {/* <-- Feel free to remove TemplateIntro */}
-        {this.state.TemplateIntro &&
-          React.createElement(this.state.TemplateIntro)}
-        {/* --> */}
-      </div>
+      <Container>
+        <Page>
+          <Page.Header
+            title="WSR Form"
+            actionsBar={
+              <ActionBar
+                onClearPressed={this.onClearPressed}
+                onSubmitPressed={this.onSubmitPressed}
+                isSubmitEnabled={this.isSubmitEnabled()}
+              />
+            }
+          />
+          <Page.Content>
+            <Container>
+              <Row>
+                <Col span={8}>
+                  <WSRForm
+                    colorOptions={colorOptions}
+                    selectedColorId={this.state.selectedColorId}
+                    agreedToTerms={this.state.isAgreeingToTerms}
+                    name={this.state.name}
+                    onNameChange={name => {
+                      this.setState({
+                        name,
+                      });
+                    }}
+                    onColorSelected={colorId => {
+                      this.setState({
+                        selectedColorId: colorId,
+                      });
+                    }}
+                    onAgreeToTermsToggled={() => {
+                      this.setState({
+                        isAgreeingToTerms: !this.state.isAgreeingToTerms,
+                      });
+                    }}
+                    onClearPressed={this.onClearPressed}
+                    onSubmitPressed={this.onSubmitPressed}
+                    isSubmitEnabled={this.isSubmitEnabled()}
+                  />
+                </Col>
+                <Col span={4}>
+                  <Row>
+                    <Col>
+                      <WSRExtra dataHook="extra-form"/>
+                    </Col>
+                  </Row>
+                  {this.state.submittedValues && (
+                      <Row>
+                      <Col>
+                        <SubmittedInfo
+                          {...this.state.submittedValues} />
+                      </Col>
+                    </Row>
+                  )}
+                </Col>
+              </Row>
+            </Container>
+          </Page.Content>
+        </Page>
+      </Container>
     );
   }
 }
-
-export default withTranslation()(App);
